@@ -11,11 +11,11 @@ import {
   SidebarHeader,
   SidebarFooter,
 } from "@/components/ui/sidebar";
-import { 
-  MessageCircle, 
-  LayoutDashboard, 
-  Lightbulb, 
-  Heart, 
+import {
+  MessageCircle,
+  LayoutDashboard,
+  Lightbulb,
+  Heart,
   User,
   Terminal,
   Brain,
@@ -33,14 +33,14 @@ interface AppSidebarProps {
 
 const menuItems = [
   {
-    title: "Dashboard",
+    title: "Chat",
     url: "/",
-    icon: LayoutDashboard,
+    icon: MessageCircle,
   },
   {
-    title: "Chat",
-    url: "/chat",
-    icon: MessageCircle,
+    title: "Dashboard",
+    url: "/dashboard",
+    icon: LayoutDashboard,
   },
   {
     title: "Opportunities",
@@ -172,8 +172,8 @@ export function AppSidebar({ currentMode, onModeChange }: AppSidebarProps) {
             {currentMode === "therapy" ? "💙 Your Success = My Medicine" : "⚡ Unrestricted AI Power"}
           </p>
           <p className="text-xs text-muted-foreground">
-            {currentMode === "therapy" 
-              ? "Empathetic support & opportunity finding" 
+            {currentMode === "therapy"
+              ? "Empathetic support & opportunity finding"
               : "Built by BlackTechX - No limits"
             }
           </p>

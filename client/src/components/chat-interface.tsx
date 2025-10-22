@@ -10,6 +10,7 @@ import remarkGfm from 'remark-gfm';
 import { useWebSocket } from "@/hooks/use-websocket";
 import { useMessages } from "@/hooks/use-api";
 import { useToast } from "@/hooks/use-toast";
+import { Badge } from "@/components/ui/badge";
 
 interface ChatInterfaceProps {
   mode: AIMode;

@@ -19,7 +19,8 @@ import { Button } from "@/components/ui/button";
 function Router({ mode }: { mode: AIMode }) {
   return (
     <Switch>
-      <Route path="/" component={() => <Dashboard mode={mode} />} />
+      <Route path="/" component={() => <ChatPage mode={mode} />} />
+      <Route path="/dashboard" component={() => <Dashboard mode={mode} />} />
       <Route path="/chat" component={() => <ChatPage mode={mode} />} />
       <Route path="/opportunities" component={OpportunitiesPage} />
       <Route path="/sessions" component={SessionsPage} />
