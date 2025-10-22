@@ -6,8 +6,6 @@ import { Send, Loader2, User, Brain, Terminal, Heart } from "lucide-react";
 import { AIMode, ChatMessage } from "@shared/schema";
 import { cn } from "@/lib/utils";
 import ReactMarkdown from "react-markdown";
-import { Prism as SyntaxHighlighter } from 'react-syntax-highlighter';
-import { oneDark } from 'react-syntax-highlighter/dist/esm/styles/prism';
 import remarkGfm from 'remark-gfm';
 import { useWebSocket } from "@/hooks/use-websocket";
 import { useMessages } from "@/hooks/use-api";
@@ -210,14 +208,11 @@ export function ChatInterface({
                   code: ({node, inline, className, children, ...props}: any) => {
                     const match = /language-(\w+)/.exec(className || '');
                     return !inline && match ? (
-                      <SyntaxHighlighter
-                        style={oneDark}
-                        language={match[1]}
-                        PreTag="div"
-                        {...props}
-                      >
-                        {String(children).replace(/\n$/, '')}
-                      </SyntaxHighlighter>
+                      <pre className="overflow-auto rounded bg-accent p-4">
+                        <code className={`language-${match[1]} text-sm`}>
+                          {children}
+                        </code>
+                      </pre>
                     ) : (
                       <code className={className} {...props}>
                         {children}
@@ -338,14 +333,11 @@ function MessageBubble({ message, mode, isStreaming }: MessageBubbleProps) {
                 code({ node, inline, className, children, ...props }: any) {
                   const match = /language-(\w+)/.exec(className || '');
                   return !inline && match ? (
-                    <SyntaxHighlighter
-                      style={oneDark}
-                      language={match[1]}
-                      PreTag="div"
-                      {...props}
-                    >
-                      {String(children).replace(/\n$/, '')}
-                    </SyntaxHighlighter>
+                    <pre className="overflow-auto rounded bg-accent p-4">
+                      <code className={`language-${match[1]} text-sm`}>
+                        {children}
+                      </code>
+                    </pre>
                   ) : (
                     <code className={cn(
                       className,
