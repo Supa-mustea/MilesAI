@@ -48,7 +48,12 @@
 
   --popover-border: 220 10% 86%;
 
-  --primary: 200 45% 50%;
+  --primary: 200 45% 65%;
+  
+  --hacxgpt-primary: 180 100% 50%;
+  --hacxgpt-accent: 330 85% 60%;
+  --hacxgpt-bg: 0 0% 8%;
+  --hacxgpt-surface: 0 0% 12%;
 
   --primary-foreground: 0 0% 98%;
 
@@ -76,9 +81,9 @@
   --chart-4: 45 60% 50%;
   --chart-5: 330 60% 50%;
 
-  --font-sans: Open Sans, sans-serif;
+  --font-sans: Inter, -apple-system, BlinkMacSystemFont, Segoe UI, sans-serif;
   --font-serif: Georgia, serif;
-  --font-mono: Menlo, monospace;
+  --font-mono: JetBrains Mono, monospace;
   --radius: .5rem; /* 8px */
   --shadow-2xs: 0px 2px 0px 0px hsl(220 15% 12% / 0.00);
   --shadow-xs: 0px 2px 0px 0px hsl(220 15% 12% / 0.00);
@@ -170,9 +175,13 @@
 
   --primary-foreground: 220 15% 12%;
 
-  --secondary: 220 8% 25%;
+  --secondary: 280 35% 70%;
+  
+  --secondary-foreground: 280 15% 12%;
 
-  --secondary-foreground: 0 0% 90%;
+  /* HacxGPT Mode Colors */
+  --hacxgpt-primary: 180 100% 50%;
+  --hacxgpt-accent: 320 100% 60%;
 
   --muted: 220 10% 22%;
 
