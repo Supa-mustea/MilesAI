@@ -33,7 +33,7 @@ interface UserProfileFormProps {
   isLoading?: boolean;
 }
 
-export function UserProfileForm({ profile, onSubmit, isLoading }: UserProfileFormProps) {
+export default function UserProfileForm({ profile, onSubmit, isLoading }: UserProfileFormProps) {
   const form = useForm<ProfileFormValues>({
     resolver: zodResolver(profileFormSchema),
     defaultValues: {
