@@ -38,7 +38,7 @@ export function ChatInterface({
   const [input, setInput] = useState("");
   const [localMessages, setLocalMessages] = useState<Message[]>([]);
   const [streamingMessage, setStreamingMessage] = useState("");
-  const [isStreaming, setIsStreaming] = useState(false);
+  const [localIsStreaming, setLocalIsStreaming] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   const { toast } = useToast();
@@ -67,7 +67,7 @@ export function ChatInterface({
         createdAt: new Date(),
       }]);
       setStreamingMessage("");
-      setIsStreaming(false);
+      setLocalIsStreaming(false);
     });
 
     on('error', (data) => {
@@ -76,7 +76,7 @@ export function ChatInterface({
         description: data.error,
         variant: "destructive",
       });
-      setIsStreaming(false);
+      setLocalIsStreaming(false);
       setStreamingMessage("");
     });
 
@@ -104,7 +104,7 @@ export function ChatInterface({
   };
 
   const sendMessage = () => {
-    if (!input.trim() || isStreaming) return;
+    if (!input.trim() || localIsStreaming) return;
 
     const userMessage: Message = {
       id: Date.now().toString(),
@@ -116,7 +116,7 @@ export function ChatInterface({
     setLocalMessages(prev => [...prev, userMessage]);
     const messageContent = input.trim();
     setInput("");
-    setIsStreaming(true);
+    setLocalIsStreaming(true);
     setStreamingMessage("");
 
     send({
@@ -254,13 +254,13 @@ export function ChatInterface({
               "resize-none min-h-[60px] max-h-[200px] transition-all duration-300",
               isTherapyMode ? "rounded-2xl" : "rounded-lg border-[hsl(var(--hacxgpt-primary)_/_0.3)]"
             )}
-            disabled={isStreaming}
+            disabled={localIsStreaming}
             data-testid="input-chat-message"
           />
           <Button
             type="submit"
             onClick={sendMessage}
-            disabled={isStreaming || !isConnected}
+            disabled={localIsStreaming || !isConnected}
             size="icon"
             className={cn(
               "h-[60px] w-[60px] flex-shrink-0 transition-all duration-300",
@@ -270,7 +270,7 @@ export function ChatInterface({
             )}
             data-testid="button-send-message"
           >
-            {isStreaming ? (
+            {localIsStreaming ? (
               <Loader2 className="w-5 h-5 animate-spin" />
             ) : (
               <Send className="w-5 h-5" />
