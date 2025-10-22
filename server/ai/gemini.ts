@@ -23,9 +23,9 @@ export class GeminiTherapistClient {
 
   async *streamResponse(userId: string, userMessage: string) {
     this.initializeConversation(userId);
-    
+
     const history = this.conversationHistory.get(userId)!;
-    
+
     // Build conversation history for Gemini
     const contents: any[] = [];
     for (let i = 1; i < history.length; i++) { // Skip system message
@@ -86,7 +86,7 @@ export class GeminiTherapistClient {
   async analyzeEmotionalState(context: any): Promise<any> {
     try {
       const prompt = `Analyze the following user context and provide emotional insights:
-      
+
 Energy Level: ${context.energyLevel}/10
 Stress Level: ${context.stressLevel}/10
 Recent Activities: ${JSON.stringify(context.recentActivities || [])}

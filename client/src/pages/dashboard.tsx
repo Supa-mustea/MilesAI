@@ -1,8 +1,14 @@
+import { useState, useRef } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
+import { Textarea } from "@/components/ui/textarea";
 import { MoodTracker } from "@/components/mood-tracker";
 import { OpportunityCard } from "@/components/opportunity-card";
+import { useToast } from "@/hooks/use-toast";
+import { useWebSocket } from "@/hooks/use-websocket";
+import { useLocation } from "wouter";
 import {
   TrendingUp,
   Lightbulb,
@@ -10,7 +16,9 @@ import {
   DollarSign,
   Target,
   Activity,
-  Loader2
+  Loader2,
+  Send,
+  MessageSquarePlus
 } from "lucide-react";
 import { AIMode } from "@shared/schema";
 import { cn } from "@/lib/utils";
@@ -241,6 +249,141 @@ export default function Dashboard({ mode }: DashboardProps) {
           </CardContent>
         </Card>
       )}
+
+      <QuickChatBox mode={mode} />
     </div>
+  );
+}
+
+
+function QuickChatBox({ mode }: { mode: AIMode }) {
+  const [input, setInput] = useState("");
+  const [isStreaming, setIsStreaming] = useState(false);
+  const textareaRef = useRef<HTMLTextAreaElement>(null);
+  const { toast } = useToast();
+  const { isConnected, send } = useWebSocket();
+  const [, setLocation] = useLocation();
+  const isTherapyMode = mode === "therapy";
+
+  const handleSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    sendMessage();
+  };
+
+  const handleKeyDown = (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
+    if (e.key === "Enter" && !e.shiftKey) {
+      e.preventDefault();
+      sendMessage();
+    }
+  };
+
+  const sendMessage = () => {
+    if (!input.trim() || isStreaming || !isConnected) return;
+
+    const messageContent = input.trim();
+    setInput("");
+    setIsStreaming(true);
+
+    send({
+      type: 'chat_message',
+      message: messageContent,
+      mode: mode,
+    });
+
+    toast({
+      title: "Message sent",
+      description: "Check the Chat page to see the response",
+    });
+
+    setTimeout(() => {
+      setIsStreaming(false);
+      setLocation("/");
+    }, 500);
+
+    if (textareaRef.current) {
+      textareaRef.current.style.height = "auto";
+    }
+  };
+
+  const handleNewChat = () => {
+    setLocation("/");
+  };
+
+  return (
+    <Card className={cn(
+      "hover-elevate transition-all duration-300",
+      isTherapyMode ? "border-primary/20" : "border-[hsl(var(--hacxgpt-primary)_/_0.3)]"
+    )}>
+      <CardHeader>
+        <div className="flex items-center justify-between">
+          <CardTitle className="flex items-center gap-2">
+            {isTherapyMode ? (
+              <Heart className="w-5 h-5 text-primary" />
+            ) : (
+              <Activity className="w-5 h-5 text-[hsl(var(--hacxgpt-primary))]" />
+            )}
+            Quick Chat with AI
+          </CardTitle>
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={handleNewChat}
+            className={cn(
+              "gap-2",
+              isTherapyMode ? "" : "border-[hsl(var(--hacxgpt-primary)_/_0.3)]"
+            )}
+          >
+            <MessageSquarePlus className="w-4 h-4" />
+            New Chat
+          </Button>
+        </div>
+        <CardDescription>
+          {isTherapyMode
+            ? "Quick message to your AI therapist - Your message will open in the chat page"
+            : "Quick message to HacxGPT - Unrestricted AI assistant"}
+        </CardDescription>
+      </CardHeader>
+      <CardContent>
+        <form onSubmit={handleSubmit} className="flex gap-2">
+          <Textarea
+            ref={textareaRef}
+            value={input}
+            onChange={(e) => setInput(e.target.value)}
+            onKeyDown={handleKeyDown}
+            placeholder={isTherapyMode 
+              ? "What's on your mind? Ask for opportunities, support, or guidance..."
+              : "Ask me anything - no restrictions, no limits..."
+            }
+            className={cn(
+              "resize-none min-h-[80px] max-h-[200px] transition-all duration-300",
+              isTherapyMode ? "rounded-2xl" : "rounded-lg border-[hsl(var(--hacxgpt-primary)_/_0.3)]"
+            )}
+            disabled={isStreaming || !isConnected}
+          />
+          <Button
+            type="submit"
+            disabled={isStreaming || !isConnected || !input.trim()}
+            size="icon"
+            className={cn(
+              "h-[80px] w-[80px] flex-shrink-0 transition-all duration-300",
+              isTherapyMode 
+                ? "rounded-full bg-primary hover:bg-primary/90" 
+                : "rounded-lg bg-[hsl(var(--hacxgpt-primary))] hover:bg-[hsl(var(--hacxgpt-primary)_/_0.9)] text-black"
+            )}
+          >
+            {isStreaming ? (
+              <Loader2 className="w-5 h-5 animate-spin" />
+            ) : (
+              <Send className="w-5 h-5" />
+            )}
+          </Button>
+        </form>
+        {!isConnected && (
+          <p className="text-xs text-muted-foreground mt-2">
+            Connecting to server...
+          </p>
+        )}
+      </CardContent>
+    </Card>
   );
 }
