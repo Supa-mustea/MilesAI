@@ -1,16 +1,15 @@
 import { useQuery, useMutation } from "@tanstack/react-query";
-import { UserProfileForm } from "@/components/user-profile-form";
+import UserProfileForm from "@/components/user-profile-form";
 import { queryClient, apiRequest } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
 import { Card } from "@/components/ui/card";
 import { Loader2 } from "lucide-react";
+import { useProfile } from "@/hooks/use-api";
 
 export default function ProfilePage() {
   const { toast } = useToast();
 
-  const { data: profile, isLoading } = useQuery<any>({
-    queryKey: ["/api/profile"],
-  });
+  const { data: profile, isLoading } = useProfile();
 
   const updateProfileMutation = useMutation({
     mutationFn: (data: any) => apiRequest("POST", "/api/profile", data),
@@ -41,7 +40,7 @@ export default function ProfilePage() {
   return (
     <div className="p-6 max-w-4xl mx-auto">
       <UserProfileForm
-        profile={profile}
+        initialData={profile}
         onSubmit={(data) => updateProfileMutation.mutate(data)}
         isLoading={updateProfileMutation.isPending}
       />

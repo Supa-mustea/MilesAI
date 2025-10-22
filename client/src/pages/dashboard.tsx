@@ -3,16 +3,18 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Badge } from "@/components/ui/badge";
 import { MoodTracker } from "@/components/mood-tracker";
 import { OpportunityCard } from "@/components/opportunity-card";
-import { 
-  TrendingUp, 
-  Lightbulb, 
-  Heart, 
+import {
+  TrendingUp,
+  Lightbulb,
+  Heart,
   DollarSign,
   Target,
-  Activity
+  Activity,
+  Loader2
 } from "lucide-react";
 import { AIMode } from "@shared/schema";
 import { cn } from "@/lib/utils";
+import { useStats, useCurrentMood, useOpportunities } from "@/hooks/use-api";
 
 interface DashboardProps {
   mode: AIMode;
@@ -23,21 +25,21 @@ export default function Dashboard({ mode }: DashboardProps) {
     queryKey: ["/api/profile"],
   });
 
-  const { data: opportunities = [] } = useQuery<any[]>({
-    queryKey: ["/api/opportunities"],
-  });
-
-  const { data: currentMood } = useQuery<any>({
-    queryKey: ["/api/mood/current"],
-  });
-
-  const { data: stats } = useQuery<any>({
-    queryKey: ["/api/stats"],
-  });
+  const { data: stats, isLoading: statsLoading } = useStats();
+  const { data: currentMood } = useCurrentMood();
+  const { data: opportunities = [] } = useOpportunities();
 
   const isTherapyMode = mode === "therapy";
   const activeOpportunities = opportunities.filter(o => o.status === "active");
   const topOpportunities = activeOpportunities.slice(0, 3);
+
+  if (statsLoading) {
+    return (
+      <div className="flex items-center justify-center h-full">
+        <Loader2 className="w-8 h-8 animate-spin" />
+      </div>
+    );
+  }
 
   return (
     <div className="p-6 space-y-6">
@@ -46,7 +48,7 @@ export default function Dashboard({ mode }: DashboardProps) {
           {isTherapyMode ? "Welcome to Your Wellness Dashboard" : "HacxGPT Command Center"}
         </h1>
         <p className="text-muted-foreground">
-          {isTherapyMode 
+          {isTherapyMode
             ? "Track your progress, mood, and opportunities for growth"
             : "Your unrestricted AI workspace - No limits, maximum capability"
           }
@@ -71,7 +73,7 @@ export default function Dashboard({ mode }: DashboardProps) {
           </CardHeader>
           <CardContent>
             <div className="text-3xl font-bold text-foreground">
-              {activeOpportunities.length}
+              {stats?.totalOpportunities || 0}
             </div>
             <p className="text-xs text-muted-foreground mt-1">
               {stats?.newOpportunitiesThisWeek || 0} new this week

@@ -1,12 +1,17 @@
-import { useState, useRef, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { Card } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
-import { Send, Loader2, User, Bot, Terminal, Brain } from "lucide-react";
+import { Send, Loader2, User, Brain, Terminal, Heart } from "lucide-react";
 import { AIMode, ChatMessage } from "@shared/schema";
 import { cn } from "@/lib/utils";
 import ReactMarkdown from "react-markdown";
+import { Prism as SyntaxHighlighter } from 'react-syntax-highlighter';
+import { oneDark } from 'react-syntax-highlighter/dist/esm/styles/prism';
+import remarkGfm from 'remark-gfm';
+import { useWebSocket } from "@/hooks/use-websocket";
+import { useMessages } from "@/hooks/use-api";
+import { useToast } from "@/hooks/use-toast";
 
 interface ChatInterfaceProps {
   mode: AIMode;
@@ -14,6 +19,13 @@ interface ChatInterfaceProps {
   onSendMessage: (message: string) => void;
   isStreaming: boolean;
   streamingContent?: string;
+}
+
+interface Message {
+  id: string;
+  role: "user" | "assistant";
+  content: string;
+  createdAt: Date;
 }
 
 export function ChatInterface({
@@ -24,33 +36,97 @@ export function ChatInterface({
   streamingContent,
 }: ChatInterfaceProps) {
   const [input, setInput] = useState("");
+  const [localMessages, setLocalMessages] = useState<Message[]>([]);
+  const [streamingMessage, setStreamingMessage] = useState("");
+  const [isStreaming, setIsStreaming] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
+  const { toast } = useToast();
+
+  const { data: serverMessages = [] } = useMessages(mode);
+  const { isConnected, on, off, send } = useWebSocket();
 
   const scrollToBottom = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
   };
 
   useEffect(() => {
+    setLocalMessages(serverMessages);
+  }, [serverMessages]);
+
+  useEffect(() => {
+    on('stream_chunk', (data) => {
+      setStreamingMessage(prev => prev + data.content);
+    });
+
+    on('stream_complete', (data) => {
+      setLocalMessages(prev => [...prev, {
+        id: data.messageId,
+        role: 'assistant',
+        content: data.fullContent,
+        createdAt: new Date(),
+      }]);
+      setStreamingMessage("");
+      setIsStreaming(false);
+    });
+
+    on('error', (data) => {
+      toast({
+        title: "Error",
+        description: data.error,
+        variant: "destructive",
+      });
+      setIsStreaming(false);
+      setStreamingMessage("");
+    });
+
+    return () => {
+      off('stream_chunk');
+      off('stream_complete');
+      off('error');
+    };
+  }, [on, off, toast]);
+
+  useEffect(() => {
     scrollToBottom();
-  }, [messages, streamingContent]);
+  }, [localMessages, streamingMessage]);
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    if (!input.trim() || isStreaming) return;
-    
-    onSendMessage(input.trim());
-    setInput("");
-    
-    if (textareaRef.current) {
-      textareaRef.current.style.height = "auto";
-    }
+    sendMessage();
   };
 
   const handleKeyDown = (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
     if (e.key === "Enter" && !e.shiftKey) {
       e.preventDefault();
-      handleSubmit(e);
+      sendMessage();
+    }
+  };
+
+  const sendMessage = () => {
+    if (!input.trim() || isStreaming) return;
+
+    const userMessage: Message = {
+      id: Date.now().toString(),
+      role: "user",
+      content: input.trim(),
+      createdAt: new Date(),
+    };
+
+    setLocalMessages(prev => [...prev, userMessage]);
+    const messageContent = input.trim();
+    setInput("");
+    setIsStreaming(true);
+    setStreamingMessage("");
+
+    send({
+      type: 'chat_message',
+      message: messageContent,
+      mode: mode,
+    });
+
+    if (textareaRef.current) {
+      textareaRef.current.style.height = "auto";
     }
   };
 
@@ -59,7 +135,12 @@ export function ChatInterface({
   return (
     <div className="flex flex-col h-full">
       <div className="flex-1 overflow-y-auto p-6 space-y-6" data-testid="chat-messages">
-        {messages.length === 0 && !streamingContent && (
+        {!isConnected && (
+          <div className="text-center text-sm text-muted-foreground py-2">
+            Connecting to server...
+          </div>
+        )}
+        {localMessages.length === 0 && !streamingMessage && (
           <div className="flex flex-col items-center justify-center h-full text-center space-y-4 py-12">
             <div className={cn(
               "w-20 h-20 rounded-2xl flex items-center justify-center transition-all duration-300",
@@ -101,7 +182,7 @@ export function ChatInterface({
           </div>
         )}
 
-        {messages.map((message) => (
+        {localMessages.map((message) => (
           <MessageBubble
             key={message.id}
             message={message}
@@ -109,20 +190,47 @@ export function ChatInterface({
           />
         ))}
 
-        {isStreaming && streamingContent && (
-          <MessageBubble
-            message={{
-              id: "streaming",
-              userId: "system",
-              role: "assistant",
-              content: streamingContent,
-              model: mode === "therapy" ? "gemini" : "hacxgpt",
-              mode,
-              timestamp: new Date(),
-            }}
-            mode={mode}
-            isStreaming
-          />
+        {streamingMessage && (
+          <div className="flex items-start gap-3">
+            <div className={`flex-shrink-0 w-10 h-10 rounded-full flex items-center justify-center ${
+              mode === "therapy" 
+                ? "bg-gradient-to-br from-purple-500 to-pink-500" 
+                : "bg-gradient-to-br from-cyan-500 to-blue-500"
+            }`}>
+              {mode === "therapy" ? <Heart className="w-5 h-5 text-white" /> : <Terminal className="w-5 h-5 text-white" />}
+            </div>
+            <div className={`flex-1 p-4 ${
+              mode === "therapy"
+                ? "bg-card/50 rounded-2xl"
+                : "bg-card/50 rounded-lg border border-cyan-500/20"
+            }`}>
+              <ReactMarkdown
+                remarkPlugins={[remarkGfm]}
+                components={{
+                  code: ({node, inline, className, children, ...props}: any) => {
+                    const match = /language-(\w+)/.exec(className || '');
+                    return !inline && match ? (
+                      <SyntaxHighlighter
+                        style={oneDark}
+                        language={match[1]}
+                        PreTag="div"
+                        {...props}
+                      >
+                        {String(children).replace(/\n$/, '')}
+                      </SyntaxHighlighter>
+                    ) : (
+                      <code className={className} {...props}>
+                        {children}
+                      </code>
+                    );
+                  }
+                }}
+              >
+                {streamingMessage}
+              </ReactMarkdown>
+              <Loader2 className="w-4 h-4 animate-spin mt-2 text-muted-foreground" />
+            </div>
+          </div>
         )}
 
         <div ref={messagesEndRef} />
@@ -151,8 +259,9 @@ export function ChatInterface({
           />
           <Button
             type="submit"
+            onClick={sendMessage}
+            disabled={isStreaming || !isConnected}
             size="icon"
-            disabled={!input.trim() || isStreaming}
             className={cn(
               "h-[60px] w-[60px] flex-shrink-0 transition-all duration-300",
               isTherapyMode 
@@ -203,7 +312,7 @@ function MessageBubble({ message, mode, isStreaming }: MessageBubbleProps) {
           )}
         </div>
       )}
-      
+
       <Card
         className={cn(
           "max-w-[80%] p-4 transition-all duration-300",
@@ -224,9 +333,20 @@ function MessageBubble({ message, mode, isStreaming }: MessageBubbleProps) {
             isTherapyMode ? "prose-invert" : "prose-invert prose-code:text-[hsl(var(--hacxgpt-primary))]"
           )}>
             <ReactMarkdown
+              remarkPlugins={[remarkGfm]}
               components={{
                 code({ node, inline, className, children, ...props }: any) {
-                  return (
+                  const match = /language-(\w+)/.exec(className || '');
+                  return !inline && match ? (
+                    <SyntaxHighlighter
+                      style={oneDark}
+                      language={match[1]}
+                      PreTag="div"
+                      {...props}
+                    >
+                      {String(children).replace(/\n$/, '')}
+                    </SyntaxHighlighter>
+                  ) : (
                     <code className={cn(
                       className,
                       "px-1.5 py-0.5 rounded",

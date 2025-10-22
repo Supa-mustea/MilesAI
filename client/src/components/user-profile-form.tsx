@@ -12,6 +12,8 @@ import { insertUserProfileSchema, UserProfile } from "@shared/schema";
 import { Loader2, Save, User as UserIcon } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { X } from "lucide-react";
+import { useUpdateProfile } from "@/hooks/use-api";
+import { useToast } from "@/hooks/use-toast";
 
 const profileFormSchema = insertUserProfileSchema.extend({
   careerGoals: z.string().optional().default(""),

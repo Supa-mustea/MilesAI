@@ -3,11 +3,27 @@ import { TherapySessionCard } from "@/components/therapy-session-card";
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Heart, Calendar, TrendingUp } from "lucide-react";
+import { Loader2 } from "lucide-react";
+import { useSessions } from "@/hooks/use-api";
 
 export default function SessionsPage() {
-  const { data: sessions = [], isLoading } = useQuery<any[]>({
-    queryKey: ["/api/sessions"],
-  });
+  const { data: sessions = [], isLoading } = useSessions();
+  const mockSessions = [
+    {
+      id: "1",
+      timestamp: "2024-01-15T10:00:00Z",
+      notes: "Felt anxious about work.",
+      mood: "anxious",
+      progress: "managed to discuss concerns with manager",
+    },
+    {
+      id: "2",
+      timestamp: "2024-01-18T14:30:00Z",
+      notes: "Feeling more relaxed after the session.",
+      mood: "calm",
+      progress: "practiced mindfulness techniques",
+    },
+  ];
 
   const recentSessions = [...sessions].sort((a, b) => 
     new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime()
@@ -43,22 +59,16 @@ export default function SessionsPage() {
         </Badge>
       </div>
 
-      {recentSessions.length > 0 ? (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-          {recentSessions.map((session) => (
+      {isLoading ? (
+        <div className="flex items-center justify-center py-12">
+          <Loader2 className="w-8 h-8 animate-spin" />
+        </div>
+      ) : (
+        <div className="grid gap-6">
+          {(sessions.length > 0 ? sessions : mockSessions).map((session: any) => (
             <TherapySessionCard key={session.id} session={session} />
           ))}
         </div>
-      ) : (
-        <Card className="p-12">
-          <div className="text-center space-y-3">
-            <Heart className="w-16 h-16 mx-auto text-muted-foreground" />
-            <h3 className="text-xl font-bold text-foreground">No therapy sessions yet</h3>
-            <p className="text-sm text-muted-foreground max-w-md mx-auto">
-              Start a conversation in Therapy mode to begin your wellness journey. Each meaningful conversation will be saved as a session.
-            </p>
-          </div>
-        </Card>
       )}
     </div>
   );

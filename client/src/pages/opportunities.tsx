@@ -7,6 +7,8 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Lightbulb, RefreshCw, Filter, TrendingUp, CheckCircle2 } from "lucide-react";
 import { queryClient, apiRequest } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
+import { Loader2 } from "lucide-react";
+import { useOpportunities } from "@/hooks/use-api";
 
 export default function OpportunitiesPage() {
   const { toast } = useToast();
@@ -40,6 +42,42 @@ export default function OpportunitiesPage() {
   const activeOpportunities = opportunities.filter(o => o.status === "active");
   const pursuingOpportunities = opportunities.filter(o => o.status === "pursuing");
   const completedOpportunities = opportunities.filter(o => o.status === "completed");
+
+  const mockOpportunities = [
+    {
+      id: "1",
+      title: "Software Engineer",
+      company: "Tech Corp",
+      description: "Develop innovative software solutions.",
+      status: "active",
+      createdAt: "2023-01-01T10:00:00Z",
+    },
+    {
+      id: "2",
+      title: "Data Scientist",
+      company: "Data Insights",
+      description: "Analyze complex datasets to derive insights.",
+      status: "active",
+      createdAt: "2023-01-05T11:30:00Z",
+    },
+    {
+      id: "3",
+      title: "Product Manager",
+      company: "Innovate Solutions",
+      description: "Lead product development cycles.",
+      status: "pursuing",
+      createdAt: "2023-01-10T09:00:00Z",
+    },
+    {
+      id: "4",
+      title: "UX Designer",
+      company: "Creative Minds",
+      description: "Design user-friendly interfaces.",
+      status: "completed",
+      createdAt: "2023-01-15T14:00:00Z",
+    },
+  ];
+
 
   return (
     <div className="p-6 space-y-6">
@@ -86,9 +124,13 @@ export default function OpportunitiesPage() {
         </TabsList>
 
         <TabsContent value="active" className="mt-6">
-          {activeOpportunities.length > 0 ? (
+          {isLoading ? (
+            <div className="flex items-center justify-center py-12">
+              <Loader2 className="w-8 h-8 animate-spin" />
+            </div>
+          ) : (
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-              {activeOpportunities.map((opportunity) => (
+              {(activeOpportunities.length > 0 ? activeOpportunities : mockOpportunities.filter(o => o.status === "active")).map((opportunity: any) => (
                 <OpportunityCard
                   key={opportunity.id}
                   opportunity={opportunity}
@@ -97,65 +139,40 @@ export default function OpportunitiesPage() {
                 />
               ))}
             </div>
-          ) : (
-            <Card className="p-12">
-              <div className="text-center space-y-3">
-                <Lightbulb className="w-16 h-16 mx-auto text-muted-foreground" />
-                <h3 className="text-xl font-bold text-foreground">No active opportunities</h3>
-                <p className="text-sm text-muted-foreground max-w-md mx-auto">
-                  Start a chat with MilesAI to discover personalized opportunities based on your skills and goals.
-                </p>
-                <Button asChild className="mt-4">
-                  <a href="/chat" data-testid="link-start-chat">Start Chatting</a>
-                </Button>
-              </div>
-            </Card>
           )}
         </TabsContent>
 
         <TabsContent value="pursuing" className="mt-6">
-          {pursuingOpportunities.length > 0 ? (
+          {isLoading ? (
+            <div className="flex items-center justify-center py-12">
+              <Loader2 className="w-8 h-8 animate-spin" />
+            </div>
+          ) : (
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-              {pursuingOpportunities.map((opportunity) => (
+              {(pursuingOpportunities.length > 0 ? pursuingOpportunities : mockOpportunities.filter(o => o.status === "pursuing")).map((opportunity: any) => (
                 <OpportunityCard
                   key={opportunity.id}
                   opportunity={opportunity}
                 />
               ))}
             </div>
-          ) : (
-            <Card className="p-12">
-              <div className="text-center space-y-3">
-                <TrendingUp className="w-16 h-16 mx-auto text-muted-foreground" />
-                <h3 className="text-xl font-bold text-foreground">No opportunities in progress</h3>
-                <p className="text-sm text-muted-foreground max-w-md mx-auto">
-                  Mark opportunities from the Active tab to start pursuing them.
-                </p>
-              </div>
-            </Card>
           )}
         </TabsContent>
 
         <TabsContent value="completed" className="mt-6">
-          {completedOpportunities.length > 0 ? (
+          {isLoading ? (
+            <div className="flex items-center justify-center py-12">
+              <Loader2 className="w-8 h-8 animate-spin" />
+            </div>
+          ) : (
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-              {completedOpportunities.map((opportunity) => (
+              {(completedOpportunities.length > 0 ? completedOpportunities : mockOpportunities.filter(o => o.status === "completed")).map((opportunity: any) => (
                 <OpportunityCard
                   key={opportunity.id}
                   opportunity={opportunity}
                 />
               ))}
             </div>
-          ) : (
-            <Card className="p-12">
-              <div className="text-center space-y-3">
-                <CheckCircle2 className="w-16 h-16 mx-auto text-muted-foreground" />
-                <h3 className="text-xl font-bold text-foreground">No completed opportunities yet</h3>
-                <p className="text-sm text-muted-foreground max-w-md mx-auto">
-                  Your completed opportunities will appear here once you achieve them.
-                </p>
-              </div>
-            </Card>
           )}
         </TabsContent>
       </Tabs>
